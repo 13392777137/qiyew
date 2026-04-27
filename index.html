@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>请假管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+        }
+        /* 导航栏 */
+        .navbar {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-left, .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        /* 面包屑 */
+        .breadcrumb {
+            background-color: #eef4ff;
+            padding: 15px;
+            color: #666;
+            font-size: 16px;
+        }
+        .breadcrumb a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        /* 卡片通用样式 */
+        .card {
+            background-color: white;
+            margin: 15px;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .card-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background-color: #007bff;
+            margin-right: 10px;
+        }
+        /* 请假信息行 */
+        .info-row {
+            display: flex;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .info-label {
+            color: #666;
+            width: 120px;
+        }
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+        /* 已通过印章 */
+        .stamp {
+            float: right;
+            border: 2px solid #a5e9cb;
+            color: #62c9a1;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            transform: rotate(10deg);
+        }
+        /* 审核通过可点击样式 */
+        .edit-link {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .edit-link:hover {
+            color: #0056b3;
+        }
+        /* 办理进度时间线 */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -30px;
+            top: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #007bff;
+            background-color: white;
+        }
+        .timeline-item.completed::before {
+            background-color: white;
+            border-color: #007bff;
+        }
+        .timeline-item.completed .timeline-icon {
+            color: #007bff;
+        }
+        .timeline-item::after {
+            content: "";
+            position: absolute;
+            left: -20px;
+            top: 23px;
+            width: 2px;
+            height: calc(100% + 10px);
+            background-color: #007bff;
+        }
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        .timeline-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .timeline-status {
+            font-size: 18px;
+        }
+        .timeline-status .tag {
+            color: #28a745;
+            margin-left: 10px;
+        }
+        .timeline-time {
+            color: #999;
+            font-size: 16px;
+        }
+        .timeline-user {
+            color: #666;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        /* 编辑页面表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 18px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- 请假详情页 -->
+    <div id="detailPage">
+        <div class="navbar">
+            <div class="navbar-left">
+                <span>&lt;</span>
+                <span>×</span>
+            </div>
+            <div class="navbar-title">请假管理</div>
+            <div class="navbar-right">
+                <span>•••</span>
+            </div>
+        </div>
+        <div class="breadcrumb">
+            <a href=" ">首页</a > &gt; 请假管理 &gt; 请假管理
+        </div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="card-title">请假信息</div>
+                <div class="stamp">已通过</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">请假类型：</div>
+                <div class="info-value" id="detailLeaveType">事假</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">请假去向：</div>
+                <div class="info-value" id="detailLeaveTo"></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">详细地址：</div>
+                <div class="info-value" id="detailAddress"></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">开始时间：</div>
+                <div class="info-value" id="detailStartTime">2026-04-18 08:00:00</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">结束时间：</div>
+                <div class="info-value" id="detailEndTime">2026-04-18 21:30:00</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">统计时长：</div>
+                <div class="info-value" id="detailDuration">天小时分钟</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">紧急联系人：</div>
+                <div class="info-value" id="detailContact"></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">紧急联系人电话：</div>
+                <div class="info-value" id="detailPhone"></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">请假理由：</div>
+                <div class="info-value" id="detailReason">申请周末日常外出</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">请假状态：</div>
+                <div class="info-value edit-link" id="detailStatus">审核通过</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">销假状态：</div>
+                <div class="info-value" id="detailCancelStatus"></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">请假附件：</div>
+                <div class="info-value" id="detailAttachment"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">办理进度</div>
+            <div class="timeline">
+                <div class="timeline-item completed">
+                    <div class="timeline-content">
+                        <div class="timeline-status">申请 <span class="tag">申请</span></div>
+                        <div class="timeline-time">2026-04-17 16:39</div>
+                    </div>
+                    <div class="timeline-user">陈卓禧</div>
+                </div>
+                <div class="timeline-item completed">
+                    <div class="timeline-content">
+                        <div class="timeline-status">辅导员审核 <span class="tag">审核通过</span></div>
+                        <div class="timeline-time">2026-04-17 17:02</div>
+                    </div>
+                    <div class="timeline-user">许雯</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-status">结束</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑页面 -->
+    <div id="editPage" style="display: none;">
+        <div class="navbar">
+            <div class="navbar-left">
+                <span>&lt;</span>
+                <span>×</span>
+            </div>
+            <div class="navbar-title">编辑请假信息</div>
+            <div class="navbar-right">
+                <span>•••</span>
+            </div>
+        </div>
+        <div class="breadcrumb">
+            <a href="#" onclick="showDetail()">首页</a > &gt; 请假管理 &gt; 编辑请假信息
+        </div>
+        <div class="card">
+            <div class="card-title">编辑请假信息</div>
+            <div class="form-group">
+                <label>请假类型：</label>
+                <select id="editLeaveType">
+                    <option value="事假">事假</option>
+                    <option value="病假">病假</option>
+                    <option value="公假">公假</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>请假去向：</label>
+                <input type="text" id="editLeaveTo" placeholder="请输入请假去向">
+            </div>
+            <div class="form-group">
+                <label>详细地址：</label>
+                <input type="text" id="editAddress" placeholder="请输入详细地址">
+            </div>
+            <div class="form-group">
+                <label>开始时间：</label>
+                <input type="datetime-local" id="editStartTime">
+            </div>
+            <div class="form-group">
+                <label>结束时间：</label>
+                <input type="datetime-local" id="editEndTime">
+            </div>
+            <div class="form-group">
+                <label>紧急联系人：</label>
+                <input type="text" id="editContact" placeholder="请输入紧急联系人">
+            </div>
+            <div class="form-group">
+                <label>紧急联系人电话：</label>
+                <input type="tel" id="editPhone" placeholder="请输入紧急联系人电话">
+            </div>
+            <div class="form-group">
+                <label>请假理由：</label>
+                <textarea id="editReason" rows="3" placeholder="请输入请假理由"></textarea>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="showDetail()">取消</button>
+                <button class="btn btn-primary" onclick="saveEdit()">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化数据
+        let leaveData = {
+            leaveType: '事假',
+            leaveTo: '',
+            address: '',
+            startTime: '2026-04-18T08:00',
+            endTime: '2026-04-18T21:30',
+            contact: '',
+            phone: '',
+            reason: '申请周末日常外出'
+        };
+
+        // 显示详情页
+        function showDetail() {
+            document.getElementById('detailPage').style.display = 'block';
+            document.getElementById('editPage').style.display = 'none';
+            updateDetailPage();
+        }
+
+        // 显示编辑页
+        function showEdit() {
+            document.getElementById('detailPage').style.display = 'none';
+            document.getElementById('editPage').style.display = 'block';
+            updateEditPage();
+        }
+
+        // 更新详情页数据
+        function updateDetailPage() {
+            document.getElementById('detailLeaveType').innerText = leaveData.leaveType;
+            document.getElementById('detailLeaveTo').innerText = leaveData.leaveTo || '';
+            document.getElementById('detailAddress').innerText = leaveData.address || '';
+            document.getElementById('detailStartTime').innerText = leaveData.startTime.replace('T', ' ') + ':00';
+            document.getElementById('detailEndTime').innerText = leaveData.endTime.replace('T', ' ') + ':00';
+            document.getElementById('detailContact').innerText = leaveData.contact || '';
+            document.getElementById('detailPhone').innerText = leaveData.phone || '';
+            document.getElementById('detailReason').innerText = leaveData.reason;
+
+            // 计算时长
+            const start = new Date(leaveData.startTime);
+            const end = new Date(leaveData.endTime);
+            const diffMs = end - start;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            document.getElementById('detailDuration').innerText = `${diffHours}小时${diffMinutes}分钟`;
+        }
+
+        // 更新编辑页数据
+        function updateEditPage() {
+            document.getElementById('editLeaveType').value = leaveData.leaveType;
+            document.getElementById('editLeaveTo').value = leaveData.leaveTo;
+            document.getElementById('editAddress').value = leaveData.address;
+            document.getElementById('editStartTime').value = leaveData.startTime;
+            document.getElementById('editEndTime').value = leaveData.endTime;
+            document.getElementById('editContact').value = leaveData.contact;
+            document.getElementById('editPhone').value = leaveData.phone;
+            document.getElementById('editReason').value = leaveData.reason;
+        }
+
+        // 保存修改
+        function saveEdit() {
+            leaveData.leaveType = document.getElementById('editLeaveType').value;
+            leaveData.leaveTo = document.getElementById('editLeaveTo').value;
+            leaveData.address = document.getElementById('editAddress').value;
+            leaveData.startTime = document.getElementById('editStartTime').value;
+            leaveData.endTime = document.getElementById('editEndTime').value;
+            leaveData.contact = document.getElementById('editContact').value;
+            leaveData.phone = document.getElementById('editPhone').value;
+            leaveData.reason = document.getElementById('editReason').value;
+            
+            alert('修改已保存！');
+            showDetail();
+        }
+
+        // 绑定点击事件：点击审核通过跳转到编辑页
+        document.getElementById('detailStatus').addEventListener('click', showEdit);
+
+        // 页面加载初始化
+        showDetail();
+    </script>
+</body>
+</html>
